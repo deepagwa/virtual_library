@@ -131,10 +131,15 @@
                             <p class="text-[10px] text-teal-100 uppercase tracking-widest font-semibold">Kids' Magic Shelf</p>
                         </div>
                     </div>
-                    <button onclick="openScannerModal()" class="bg-yellow-400 hover:bg-yellow-300 text-slate-900 text-xs px-3 py-2 rounded-full font-bold shadow-md flex items-center space-x-1 border border-white/40 transition">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        <span>AI Scan</span>
-                    </button>
+                    <div class="flex items-center space-x-1.5">
+                        <button onclick="openSettingsModal()" class="bg-white/20 hover:bg-white/30 text-white w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm" title="Parent Settings">
+                            <i class="fa-solid fa-gear text-sm"></i>
+                        </button>
+                        <button onclick="openScannerModal()" class="bg-yellow-400 hover:bg-yellow-300 text-slate-900 text-xs px-3 py-2 rounded-full font-bold shadow-md flex items-center space-x-1 border border-white/40 transition">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>AI Scan</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Mascot Greeting Box -->
@@ -308,129 +313,39 @@
                 <button onclick="closeAddBookModal()" class="bg-white/40 hover:bg-white/60 w-7 h-7 rounded-full flex items-center justify-center"><i class="fa-solid fa-times text-xs"></i></button>
             </div>
 
-            <form id="manual-add-form" onsubmit="saveNewBook(event)" class="p-5 space-y-3 max-h-[480px] overflow-y-auto no-scrollbar">
+    <!-- MODAL 3: Parent Settings Modal (For Gemini API Key Setup) -->
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-[370px] overflow-hidden shadow-2xl border-4 border-teal-400">
+            <div class="bg-teal-400 p-4 text-white font-bold flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <span class="text-2xl">⚙️</span>
+                    <div>
+                        <h2 class="text-sm font-black uppercase">Parent Settings</h2>
+                        <p class="text-[9px] text-teal-100">Configure AI Scanning Magic</p>
+                    </div>
+                </div>
+                <button onclick="closeSettingsModal()" class="bg-white/40 hover:bg-white/60 w-7 h-7 rounded-full flex items-center justify-center"><i class="fa-solid fa-times text-xs"></i></button>
+            </div>
+
+            <div class="p-5 space-y-4">
+                <p class="text-[11px] text-slate-600 leading-relaxed">
+                    To scan physical book stacks using real Gemini AI on your phone, you need a free <strong>Gemini API Key</strong>.
+                </p>
                 
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-[10px] text-amber-800 leading-normal">
+                    <i class="fa-solid fa-circle-info mr-1"></i>
+                    <strong>How to get a free key:</strong> Visit <a href="https://aistudio.google.com/" target="_blank" class="underline font-bold text-teal-600">Google AI Studio</a>, log in with any Google account, click <strong>"Create API Key"</strong>, and paste it below.
+                </div>
+
                 <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase">Book Title *</label>
-                    <input type="text" id="add-title" required placeholder="e.g. Harry Potter" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-400">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Gemini API Key</label>
+                    <input type="password" id="settings-api-key" placeholder="AIzaSy..." class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-teal-400 font-mono">
                 </div>
 
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase">Author Name *</label>
-                        <input type="text" id="add-author" required placeholder="e.g. J.K. Rowling" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-400">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase">Series Title</label>
-                        <input type="text" id="add-series" placeholder="e.g. Hogwarts Arc" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-400">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase">Vol. Number</label>
-                        <input type="number" id="add-volume" placeholder="e.g. 1" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-400">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase">Reading Status</label>
-                        <select id="add-status" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-400 bg-white">
-                            <option value="reading">Currently Reading 📖</option>
-                            <option value="read">Finished / Read ✅</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase">Finished Month</label>
-                        <select id="add-month" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-400 bg-white">
-                            <option value="Jan">January</option>
-                            <option value="Feb">February</option>
-                            <option value="Mar">March</option>
-                            <option value="Apr">April</option>
-                            <option value="May">May</option>
-                            <option value="Jun" selected>June</option>
-                            <option value="Jul">July</option>
-                            <option value="Aug">August</option>
-                            <option value="Sep">September</option>
-                            <option value="Oct">October</option>
-                            <option value="Nov">November</option>
-                            <option value="Dec">December</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase">Year</label>
-                        <select id="add-year" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-400 bg-white">
-                            <option value="2026" selected>2026</option>
-                            <option value="2025">2025</option>
-                            <option value="2024">2024</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Spine Customization -->
-                <div class="bg-indigo-50/50 p-3 rounded-2xl border border-indigo-100">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Design Spine Customizations</span>
-                    
-                    <div class="flex items-center space-x-3">
-                        <div id="spine-customization-preview" class="w-12 h-16 rounded-lg bg-pink-300 flex flex-col items-center justify-between p-1 border border-black/10 shrink-0">
-                            <span class="text-xs">⭐️</span>
-                            <div class="w-0.5 h-6 bg-black/10"></div>
-                        </div>
-                        <div class="flex-1 space-y-2">
-                            <!-- Color Select Picker -->
-                            <div class="flex space-x-1.5 overflow-x-auto py-0.5 no-scrollbar">
-                                <span onclick="setSpineColor('#FFB3BA')" class="w-5 h-5 rounded-full border border-black/10 cursor-pointer block shrink-0" style="background-color: #FFB3BA;"></span>
-                                <span onclick="setSpineColor('#FFDFBA')" class="w-5 h-5 rounded-full border border-black/10 cursor-pointer block shrink-0" style="background-color: #FFDFBA;"></span>
-                                <span onclick="setSpineColor('#FFFFBA')" class="w-5 h-5 rounded-full border border-black/10 cursor-pointer block shrink-0" style="background-color: #FFFFBA;"></span>
-                                <span onclick="setSpineColor('#BAFFC9')" class="w-5 h-5 rounded-full border border-black/10 cursor-pointer block shrink-0" style="background-color: #BAFFC9;"></span>
-                                <span onclick="setSpineColor('#BAE1FF')" class="w-5 h-5 rounded-full border border-black/10 cursor-pointer block shrink-0" style="background-color: #BAE1FF;"></span>
-                                <span onclick="setSpineColor('#E8AEFF')" class="w-5 h-5 rounded-full border border-black/10 cursor-pointer block shrink-0" style="background-color: #E8AEFF;"></span>
-                                <span onclick="setSpineColor('#FFC6FF')" class="w-5 h-5 rounded-full border border-black/10 cursor-pointer block shrink-0" style="background-color: #FFC6FF;"></span>
-                            </div>
-                            <!-- Pattern select -->
-                            <div class="grid grid-cols-3 gap-1">
-                                <span onclick="setSpinePattern('solid')" class="text-[9px] bg-white border rounded text-center cursor-pointer py-1 font-bold">Solid</span>
-                                <span onclick="setSpinePattern('stripes')" class="text-[9px] bg-white border rounded text-center cursor-pointer py-1 font-bold">Stripes</span>
-                                <span onclick="setSpinePattern('dots')" class="text-[9px] bg-white border rounded text-center cursor-pointer py-1 font-bold">Dots</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Custom Cover Upload / Preset Selection -->
-                <div class="bg-pink-50/50 p-3 rounded-2xl border border-pink-100 space-y-2">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Book Cover Artwork (Optional)</span>
-                    <div class="flex items-center space-x-2">
-                        <select id="cover-source-select" onchange="toggleCoverInputs()" class="border border-slate-200 rounded-lg px-2 py-1 text-xs outline-none bg-white">
-                            <option value="preset-themes">Cute Themes</option>
-                            <option value="upload-url">Upload Cover Photo</option>
-                        </select>
-
-                        <!-- Preset Selection -->
-                        <div id="cover-preset-wrapper" class="flex-1">
-                            <select id="cover-preset-select" class="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs outline-none bg-white">
-                                <option value="unicorn">🦄 Unicorn Dream</option>
-                                <option value="dragon">🐉 Fire Dragon</option>
-                                <option value="galaxy">🌌 Outer Space</option>
-                                <option value="candy">🍭 Candy Castle</option>
-                                <option value="jungle">🦁 Jungle Run</option>
-                            </select>
-                        </div>
-
-                        <!-- Image File Upload Selection -->
-                        <div id="cover-file-wrapper" class="hidden flex-1 flex items-center space-x-1">
-                            <input type="file" id="book-cover-image" accept="image/*" class="hidden" onchange="compressBookCover(event)">
-                            <button type="button" onclick="document.getElementById('book-cover-image').click()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-[10px] px-3 py-1.5 rounded-lg font-bold">Choose File</button>
-                            <span id="cover-upload-status" class="text-[8px] text-slate-400 truncate max-w-[80px]">No file</span>
-                        </div>
-                    </div>
-                </div>
-
-                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-black py-3 rounded-2xl text-xs shadow-md transition">
-                    🌈 Put on My Bookshelf!
+                <button onclick="saveSettings()" class="w-full bg-teal-500 hover:bg-teal-400 text-white font-black py-3 rounded-2xl text-xs shadow-md transition">
+                    💾 Save & Activate Magic!
                 </button>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -921,6 +836,27 @@
             document.getElementById("add-book-modal").classList.add("hidden");
         }
 
+        function openSettingsModal() {
+            const savedKey = localStorage.getItem('deetya_gemini_api_key') || '';
+            document.getElementById("settings-api-key").value = savedKey;
+            document.getElementById("settings-modal").classList.remove("hidden");
+        }
+
+        function closeSettingsModal() {
+            document.getElementById("settings-modal").classList.add("hidden");
+        }
+
+        function saveSettings() {
+            const keyInput = document.getElementById("settings-api-key").value.trim();
+            localStorage.setItem('deetya_gemini_api_key', keyInput);
+            closeSettingsModal();
+            if (keyInput) {
+                showNemoMessage("🔮 Gemini AI Key successfully saved! Real book scanning is now live!", "✨");
+            } else {
+                showNemoMessage("ℹ️ API key removed. Nemo will now run in Magic Demo Mode.", "🐛");
+            }
+        }
+
         function openScannerModal() {
             // Reset scan components
             document.getElementById("scanned-image-preview").classList.add("hidden");
@@ -1036,7 +972,54 @@
         // Multi-book stack API Call with structured output Schema using Gemini 2.5 Flash
         async function callGeminiToScanStack(base64Data) {
             const statusMsg = document.getElementById("scan-status-message");
-            statusMsg.innerText = "Nemo is analyzing individual book spines...";
+            const laser = document.getElementById("scan-laser-line");
+            
+            // Try to load user's custom API key from local storage
+            const apiKey = localStorage.getItem('deetya_gemini_api_key') || "";
+
+            // If no custom API key is present, fallback to an ultra-realistic Simulated Magic Demo Scan
+            if (!apiKey) {
+                statusMsg.innerText = "Nemo is running in Demo Mode... Simulating scan!";
+                
+                // Keep the laser scanning for 3 seconds to look realistic and magical!
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                const demoBooks = [
+                    {
+                        title: "Wings of Fire: The Dragonet Prophecy",
+                        author: "Tui T. Sutherland",
+                        series: "Wings of Fire",
+                        volume: "1",
+                        color: "#FFDFBA",
+                        pattern: "waves",
+                        sticker: "🐉"
+                    },
+                    {
+                        title: "The Bad Guys",
+                        author: "Aaron Blabey",
+                        series: "The Bad Guys",
+                        volume: "1",
+                        color: "#BAE1FF",
+                        pattern: "stripes",
+                        sticker: "🐺"
+                    },
+                    {
+                        title: "Percy Jackson: The Lightning Thief",
+                        author: "Rick Riordan",
+                        series: "Percy Jackson",
+                        volume: "1",
+                        color: "#E8AEFF",
+                        pattern: "dots",
+                        sticker: "🔱"
+                    }
+                ];
+
+                displayScannedResults(demoBooks);
+                showNemoMessage("💡 Tip: Enter a Gemini API Key in Settings (⚙️) to scan real custom photos!", "🔮");
+                return;
+            }
+
+            statusMsg.innerText = "Nemo is analyzing individual book spines using Gemini...";
 
             const systemPrompt = `You are a high-fidelity visual librarian mascot named Nemo. 
             Analyze the uploaded image of a book cover, spine, or a vertical/horizontal stack of multiple books.
@@ -1055,7 +1038,6 @@
             - pattern (choose either 'solid', 'stripes', 'dots', or 'waves')
             - sticker (choose a fun kids emoji like 🦄, 🦖, ⚡, 🚀, 🐶, 🐱, 🌲, 🌸, 🔮, 🍩, 🎨)`;
 
-            const apiKey = ""; // The runtime provides the key
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
             const payload = {
@@ -1102,7 +1084,10 @@
                     body: JSON.stringify(payload)
                 });
 
-                if (!response.ok) throw new Error("API call failed");
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData?.error?.message || "API call failed");
+                }
 
                 const result = await response.json();
                 const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -1114,9 +1099,9 @@
                     throw new Error("No textual content extracted from scanner.");
                 }
             } catch(e) {
-                statusMsg.innerText = "Oops! Nemo got dizzy. Try typing or scanning again!";
-                document.getElementById("scan-laser-line").classList.add("hidden");
-                console.error(e);
+                statusMsg.innerText = "Nemo got dizzy! Check your API key in Settings (⚙️) and network, then try again.";
+                laser.classList.add("hidden");
+                console.error("Scanning Error:", e);
             }
         }
 
