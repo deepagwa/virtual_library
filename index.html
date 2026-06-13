@@ -12,7 +12,7 @@
     <meta name="theme-color" content="#2dd4bf">
 
     <!-- Web App Manifest (Inline Base64 JSON for Single File Portability) -->
-    <link rel="manifest" href="data:application/json;base64,ewogICAgIm5hbWUiOiAiRGVldHlhTGlicmFyeSIsCiAgICAic2hvcnRfbmFtZSI6ICJEZWV0eWFMaWIiLAogICAgInN0YXJ0X3VybCI6ICIuIiwKICAgICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICAgImJhY2tncm91bmRfY29sb3IiOiAiI2VlZmNmZCIsCiAgICAidGhlbWVfY29sb3IiOiAiIzJkZDRiZiIsCiAgICAib3JpZW50YXRpb24iOiAicG9ydHJhaXQiLAogICAgImljb25zIjogWwogICAgICAgIHsKICAgICAgICAgICAgInNyYyI6ICJodHRwczovL2Nkbi1jb25zLWljb25zLXBuZy5mbGF0aWNvbi5jb20vNTEyLzM1MzEvMzUzMTU0MC5wbmciLAogICAgICAgICAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAgICAgICAgICJ0eXBlIjogImltYWdlL3BuZyIsCiAgICAgICAgICAgICJwdXJwb3NlIjogImFueSBtYXNrYWJsZSIKICAgICAgICB9CiAgICBdCn0=">
+    <link rel="manifest" href="data:application/json;base64,ewogICAgIm5hbWUiOiAiRGVldHlhTGlicmFyeSIsCiAgICAic2hvcnRfbmFtZSI6ICJEZWV0eWFMaWIiLAogICAgInN0YXJ0X3VybCI6ICIuIiwKICAgICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICAgImJhY2tncm91bmRfY29sb3IiOiAiI2VlZmNmZCIsCiAgICAidGhlbWVfY29sb3IiOiAiIzJkZDRiZiIsCiAgICAib3JpZW50YXRpb24iOiAicG9ydHJhaXQiLAogICAgImljb25zIjogWwogICAgICAgIHsKICAgICAgICAgICAgInNyYyI6ICJodHRwczovL2Nkbi1jb25zLWljb25zLXBuZy5mbGF0aWNvbi5jb20vNTEyLzM1MzEvMzUzMTU0MC5wbmciLAogICAgICAgICAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAgICAgICAgICJ0eXBlIjogImltYWdlL3BuZyIsCiAgICAgICAgICAgICJwdXJwb3NlIjogImFueSBtYXNKYWJsZSIKICAgICAgICB9CiAgICBdCn0=">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -24,6 +24,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- PDF.js library for client-side PDF text extraction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
     <style>
         body {
@@ -149,7 +151,7 @@
                     </div>
                     <div class="flex-1 text-xs">
                         <p class="font-bold text-emerald-600 mb-0.5">Nemo says:</p>
-                        <p id="nemo-speech" class="text-slate-600 italic">"Hi there! Scan books with my magic lens, or type their names to build your shelf!"</p>
+                        <p id="nemo-speech" class="text-slate-600 italic">"Hi there! Scan books with my magic lens, paste reading logs, or import school book lists to instantly fill your shelves!"</p>
                     </div>
                 </div>
             </div>
@@ -219,11 +221,16 @@
                 <span class="text-[9px] font-bold mt-0.5">Library</span>
             </button>
             
-            <button onclick="openAddBookModal()" class="w-12 h-12 bg-gradient-to-tr from-pink-500 to-rose-400 text-white rounded-full flex items-center justify-center shadow-lg transform -translate-y-4 border-4 border-white hover:scale-110 transition">
+            <button onclick="openAddBookModal()" class="w-12 h-12 bg-gradient-to-tr from-pink-500 to-rose-400 text-white rounded-full flex items-center justify-center shadow-lg transform -translate-y-4 border-4 border-white hover:scale-110 transition" title="Add Single Book">
                 <i class="fa-solid fa-plus text-xl"></i>
             </button>
 
-            <button onclick="openScannerModal()" class="flex flex-col items-center text-slate-500 hover:text-yellow-500">
+            <button onclick="openBulkImportModal()" class="flex flex-col items-center text-slate-500 hover:text-indigo-500" title="Magic Bulk Importer">
+                <i class="fa-solid fa-wand-magic-sparkles text-xl text-indigo-500 animate-pulse"></i>
+                <span class="text-[9px] font-bold mt-0.5">Magic Import</span>
+            </button>
+
+            <button onclick="openScannerModal()" class="flex flex-col items-center text-slate-500 hover:text-yellow-500" title="AI Spine Stack Scanner">
                 <i class="fa-solid fa-camera-rotate text-xl"></i>
                 <span class="text-[9px] font-bold mt-0.5">AI Scan</span>
             </button>
@@ -313,6 +320,132 @@
                 <button onclick="closeAddBookModal()" class="bg-white/40 hover:bg-white/60 w-7 h-7 rounded-full flex items-center justify-center"><i class="fa-solid fa-times text-xs"></i></button>
             </div>
 
+            <form id="manual-add-form" onsubmit="saveNewBook(event)" class="p-5 space-y-3 max-h-[440px] overflow-y-auto no-scrollbar">
+                
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase">Book Title *</label>
+                    <input type="text" id="add-title" required placeholder="e.g. Harry Potter" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-400">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Author Name *</label>
+                        <input type="text" id="add-author" required placeholder="e.g. J.K. Rowling" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-400">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Series Title</label>
+                        <input type="text" id="add-series" placeholder="e.g. Hogwarts Arc" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-400">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Vol. Number</label>
+                        <input type="number" id="add-volume" placeholder="e.g. 1" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-400">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Reading Status</label>
+                        <select id="add-status" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-400 bg-white">
+                            <option value="reading">Currently Reading 📖</option>
+                            <option value="read">Finished / Read ✅</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Finished Month</label>
+                        <select id="add-month" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-400 bg-white">
+                            <option value="Jan">January</option>
+                            <option value="Feb">February</option>
+                            <option value="Mar">March</option>
+                            <option value="Apr">April</option>
+                            <option value="May">May</option>
+                            <option value="Jun" selected>June</option>
+                            <option value="Jul">July</option>
+                            <option value="Aug">August</option>
+                            <option value="Sep">September</option>
+                            <option value="Oct">October</option>
+                            <option value="Nov">November</option>
+                            <option value="Dec">December</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Year</label>
+                        <select id="add-year" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-400 bg-white">
+                            <option value="2026" selected>2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Customized Spine Design Sandbox for Kids -->
+                <div class="bg-indigo-50/50 p-3 rounded-2xl border border-indigo-100">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Design Spine Customizations</span>
+                    
+                    <div class="flex items-center space-x-3">
+                        <div id="spine-customization-preview" class="w-12 h-16 rounded-lg bg-pink-300 flex flex-col items-center justify-between p-1 border border-black/10 shrink-0">
+                            <span class="text-xs">⭐️</span>
+                            <div class="w-0.5 h-6 bg-black/10"></div>
+                        </div>
+                        <div class="flex-1 space-y-2">
+                            <!-- Color select picker row -->
+                            <div class="flex space-x-1.5 overflow-x-auto py-0.5 no-scrollbar">
+                                <span onclick="setSpineColor('#FFB3BA')" class="w-5 h-5 rounded-full border border-black/10 cursor-pointer block shrink-0" style="background-color: #FFB3BA;"></span>
+                                <span onclick="setSpineColor('#FFDFBA')" class="w-5 h-5 rounded-full border border-black/10 cursor-pointer block shrink-0" style="background-color: #FFDFBA;"></span>
+                                <span onclick="setSpineColor('#FFFFBA')" class="w-5 h-5 rounded-full border border-black/10 cursor-pointer block shrink-0" style="background-color: #FFFFBA;"></span>
+                                <span onclick="setSpineColor('#BAFFC9')" class="w-5 h-5 rounded-full border border-black/10 cursor-pointer block shrink-0" style="background-color: #BAFFC9;"></span>
+                                <span onclick="setSpineColor('#BAE1FF')" class="w-5 h-5 rounded-full border border-black/10 cursor-pointer block shrink-0" style="background-color: #BAE1FF;"></span>
+                                <span onclick="setSpineColor('#E8AEFF')" class="w-5 h-5 rounded-full border border-black/10 cursor-pointer block shrink-0" style="background-color: #E8AEFF;"></span>
+                                <span onclick="setSpineColor('#FFC6FF')" class="w-5 h-5 rounded-full border border-black/10 cursor-pointer block shrink-0" style="background-color: #FFC6FF;"></span>
+                            </div>
+                            <!-- Pattern select -->
+                            <div class="grid grid-cols-3 gap-1">
+                                <span onclick="setSpinePattern('solid')" class="text-[9px] bg-white border rounded text-center cursor-pointer py-1 font-bold">Solid</span>
+                                <span onclick="setSpinePattern('stripes')" class="text-[9px] bg-white border rounded text-center cursor-pointer py-1 font-bold">Stripes</span>
+                                <span onclick="setSpinePattern('dots')" class="text-[9px] bg-white border rounded text-center cursor-pointer py-1 font-bold">Dots</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Cover Upload / Preset Selection -->
+                <div class="bg-pink-50/50 p-3 rounded-2xl border border-pink-100 space-y-2">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Book Cover Artwork (Optional)</span>
+                    <div class="flex items-center space-x-2">
+                        <select id="cover-source-select" onchange="toggleCoverInputs()" class="border border-slate-200 rounded-lg px-2 py-1 text-xs outline-none bg-white">
+                            <option value="preset-themes">Cute Themes</option>
+                            <option value="upload-url">Upload Cover Photo</option>
+                        </select>
+
+                        <!-- Preset selection -->
+                        <div id="cover-preset-wrapper" class="flex-1">
+                            <select id="cover-preset-select" class="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs outline-none bg-white">
+                                <option value="unicorn">🦄 Unicorn Dream</option>
+                                <option value="dragon">🐉 Fire Dragon</option>
+                                <option value="galaxy">🌌 Outer Space</option>
+                                <option value="candy">🍭 Candy Castle</option>
+                                <option value="jungle">🦁 Jungle Run</option>
+                            </select>
+                        </div>
+
+                        <!-- Image File Upload selection -->
+                        <div id="cover-file-wrapper" class="hidden flex-1 flex items-center space-x-1">
+                            <input type="file" id="book-cover-image" accept="image/*" class="hidden" onchange="compressBookCover(event)">
+                            <button type="button" onclick="document.getElementById('book-cover-image').click()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-[10px] px-3 py-1.5 rounded-lg font-bold">Choose File</button>
+                            <span id="cover-upload-status" class="text-[8px] text-slate-400 truncate max-w-[80px]">No file</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-black py-3 rounded-2xl text-xs shadow-md transition">
+                    🌈 Put on My Bookshelf!
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL 3: Parent Settings Modal (For Gemini API Key Setup) -->
     <div id="settings-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-[2.5rem] w-full max-w-[370px] overflow-hidden shadow-2xl border-4 border-teal-400">
@@ -329,7 +462,7 @@
 
             <div class="p-5 space-y-4">
                 <p class="text-[11px] text-slate-600 leading-relaxed">
-                    To scan physical book stacks using real Gemini AI on your phone, you need a free <strong>Gemini API Key</strong>.
+                    To scan physical book stacks or automatically import logs using real Gemini AI on your phone, you need a free <strong>Gemini API Key</strong>.
                 </p>
                 
                 <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-[10px] text-amber-800 leading-normal">
@@ -344,6 +477,96 @@
 
                 <button onclick="saveSettings()" class="w-full bg-teal-500 hover:bg-teal-400 text-white font-black py-3 rounded-2xl text-xs shadow-md transition">
                     💾 Save & Activate Magic!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: Magic Bulk Importer Modal (PDF, Copy-Paste, Google Doc) -->
+    <div id="bulk-import-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-[390px] overflow-hidden shadow-2xl border-4 border-indigo-400">
+            <div class="bg-indigo-400 p-4 text-white font-bold flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <span class="text-2xl">🪄</span>
+                    <div>
+                        <h2 class="text-sm font-black uppercase">Magic Bulk Importer</h2>
+                        <p class="text-[9px] text-indigo-100">Import logs from Docs, PDFs, or pasted lists!</p>
+                    </div>
+                </div>
+                <button onclick="closeBulkImportModal()" class="bg-white/40 hover:bg-white/60 w-7 h-7 rounded-full flex items-center justify-center"><i class="fa-solid fa-times text-xs"></i></button>
+            </div>
+
+            <!-- Tab Navigation for Importer -->
+            <div class="flex border-b border-slate-100 bg-slate-50">
+                <button onclick="switchImportTab('copy')" id="tab-import-copy" class="flex-1 py-2.5 text-xs font-black text-indigo-600 border-b-2 border-indigo-500 bg-white">
+                    <i class="fa-solid fa-clipboard mr-1"></i> Paste Text
+                </button>
+                <button onclick="switchImportTab('pdf')" id="tab-import-pdf" class="flex-1 py-2.5 text-xs font-bold text-slate-500">
+                    <i class="fa-solid fa-file-pdf mr-1"></i> Upload PDF
+                </button>
+                <button onclick="switchImportTab('gdoc')" id="tab-import-gdoc" class="flex-1 py-2.5 text-xs font-bold text-slate-500">
+                    <i class="fa-brands fa-google-drive mr-1"></i> Google Doc
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4">
+                
+                <!-- Tab CONTENT 1: Copy Paste -->
+                <div id="import-content-copy" class="space-y-3">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Paste Book Logs / Reading Lists</label>
+                        <textarea id="import-pasted-text" rows="5" placeholder="Dump raw text, emails, lists, or log titles here...&#10;e.g.&#10;1. Percy Jackson Book 1 - Rick Riordan&#10;2. Matilda (Roald Dahl)&#10;3. Dog Man Unleashed" class="w-full border border-slate-200 rounded-xl p-3 text-xs outline-none focus:border-indigo-400 resize-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- Tab CONTENT 2: Upload PDF -->
+                <div id="import-content-pdf" class="hidden space-y-3">
+                    <div id="pdf-drag-zone" onclick="document.getElementById('import-pdf-input').click()" class="w-full h-32 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-indigo-50/20 transition group">
+                        <div class="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mb-1.5 group-hover:scale-110 transition duration-300">
+                            <i class="fa-solid fa-file-pdf text-lg"></i>
+                        </div>
+                        <p class="text-xs font-bold text-slate-600">Select reading logs PDF</p>
+                        <p class="text-[9px] text-slate-400 mt-0.5">Nemo will read pages client-side securely</p>
+                    </div>
+                    <input type="file" id="import-pdf-input" accept="application/pdf" class="hidden" onchange="processPDFFile(event)">
+                    <p id="import-pdf-status" class="text-[10px] font-bold text-slate-400 text-center truncate"></p>
+                </div>
+
+                <!-- Tab CONTENT 3: Google Doc Link -->
+                <div id="import-content-gdoc" class="hidden space-y-3">
+                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-[10px] text-amber-800 leading-normal">
+                        <i class="fa-solid fa-circle-info mr-1"></i>
+                        <strong>Prerequisite:</strong> Google Doc must be shared publicly so the magic importer can access it. (Click <strong>Share</strong> and select <strong>"Anyone with the link can view"</strong>).
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Google Doc URL</label>
+                        <input type="text" id="import-gdoc-url" placeholder="https://docs.google.com/document/d/.../edit" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-indigo-400">
+                    </div>
+                </div>
+
+                <!-- Importer Loading Overlay -->
+                <div id="import-status-wrapper" class="hidden w-full bg-indigo-50 border border-indigo-200 rounded-2xl p-3">
+                    <div class="flex items-center space-x-2">
+                        <div class="animate-spin text-indigo-500"><i class="fa-solid fa-circle-notch text-sm"></i></div>
+                        <p id="import-status-message" class="text-[11px] font-bold text-indigo-800">Processing records...</p>
+                    </div>
+                </div>
+
+                <!-- Bulk Detected Results Interactive Checklist -->
+                <div id="import-results-wrapper" class="hidden w-full border-t border-slate-100 pt-3">
+                    <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Identified books to load:</h4>
+                    <div id="import-books-list" class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                        <!-- Checklist fills dynamically -->
+                    </div>
+
+                    <button onclick="addAllVerifiedImportedBooks()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-black py-2.5 rounded-2xl text-xs mt-3 shadow-md flex items-center justify-center space-x-1.5 transition">
+                        <i class="fa-solid fa-book-sparkles"></i>
+                        <span>Stock Books on My Shelves!</span>
+                    </button>
+                </div>
+
+                <button onclick="triggerBulkImportProcess()" id="btn-run-bulk-import" class="w-full bg-indigo-500 hover:bg-indigo-400 text-white font-black py-3 rounded-2xl text-xs shadow-md transition">
+                    🔮 Extract Magical Logs!
                 </button>
             </div>
         </div>
@@ -420,6 +643,9 @@
     </div>
 
     <script>
+        // PDF.js worker setup
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
         // Default cover mapping details
         const PRESET_COVER_MAP = {
             unicorn: { bg: 'linear-gradient(135deg, #FFC6FF 0%, #D8B4F8 100%)', emoji: '🦄' },
@@ -443,7 +669,10 @@
             coverSourceType: 'preset-themes', // preset-themes, upload-url
             coverUploadBase64: null,
             activeBookId: null,
-            scannedBooksTemp: []
+            scannedBooksTemp: [],
+            activeImportTab: 'copy', // copy, pdf, gdoc
+            parsedImportBooksTemp: [],
+            extractedPDFText: ""
         };
 
         // Standard speech arrays for Nemo Mascot
@@ -851,7 +1080,7 @@
             localStorage.setItem('deetya_gemini_api_key', keyInput);
             closeSettingsModal();
             if (keyInput) {
-                showNemoMessage("🔮 Gemini AI Key successfully saved! Real book scanning is now live!", "✨");
+                showNemoMessage("🔮 Gemini AI Key successfully saved! Real book scanning & bulk importing is now live!", "✨");
             } else {
                 showNemoMessage("ℹ️ API key removed. Nemo will now run in Magic Demo Mode.", "🐛");
             }
@@ -977,7 +1206,7 @@
             // Try to load user's custom API key from local storage
             const apiKey = localStorage.getItem('deetya_gemini_api_key') || "";
 
-            // If no custom API key is present, fallback to an ultra-realistic Simulated Magic Demo Scan
+            // If no custom API key is present, fallback to simulated Magic Demo Scan
             if (!apiKey) {
                 statusMsg.innerText = "Nemo is running in Demo Mode... Simulating scan!";
                 
@@ -1038,7 +1267,7 @@
             - pattern (choose either 'solid', 'stripes', 'dots', or 'waves')
             - sticker (choose a fun kids emoji like 🦄, 🦖, ⚡, 🚀, 🐶, 🐱, 🌲, 🌸, 🔮, 🍩, 🎨)`;
 
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
             const payload = {
                 contents: [{
@@ -1198,11 +1427,371 @@
                 }
                 showNemoMessage(msg, '🎉');
             } else if (duplicateCount > 0) {
-                showNemoMessage(`⚠️ All selected books are already on your bookshelf! (Ignored ${duplicateCount} duplicates)`, '📚');
+                showNemoMessage("⚠️ All selected books are already on your bookshelf!", '📚');
             }
 
             closeScannerModal();
         }
+
+        /* ------------------ Magic Bulk Importer Features ------------------ */
+
+        function openBulkImportModal() {
+            // Reset state
+            state.parsedImportBooksTemp = [];
+            state.extractedPDFText = "";
+            document.getElementById("import-pasted-text").value = "";
+            document.getElementById("import-pdf-input").value = "";
+            document.getElementById("import-pdf-status").innerText = "";
+            document.getElementById("import-gdoc-url").value = "";
+            document.getElementById("import-results-wrapper").classList.add("hidden");
+            document.getElementById("import-status-wrapper").classList.add("hidden");
+            document.getElementById("btn-run-bulk-import").classList.remove("hidden");
+
+            switchImportTab('copy');
+            document.getElementById("bulk-import-modal").classList.remove("hidden");
+        }
+
+        function closeBulkImportModal() {
+            document.getElementById("bulk-import-modal").classList.add("hidden");
+        }
+
+        function switchImportTab(tabName) {
+            state.activeImportTab = tabName;
+
+            // Reset Tab styling
+            ['copy', 'pdf', 'gdoc'].forEach(t => {
+                const btn = document.getElementById(`tab-import-${t}`);
+                const content = document.getElementById(`import-content-${t}`);
+                if (btn && content) {
+                    if (t === tabName) {
+                        btn.className = "flex-1 py-2.5 text-xs font-black text-indigo-600 border-b-2 border-indigo-500 bg-white";
+                        content.classList.remove("hidden");
+                    } else {
+                        btn.className = "flex-1 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition";
+                        content.classList.add("hidden");
+                    }
+                }
+            });
+        }
+
+        // Read Client-Side PDF Pages
+        async function processPDFFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusLabel = document.getElementById("import-pdf-status");
+            statusLabel.innerText = `Reading "${file.name}"...`;
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                // Load pdf using pdfjs library
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let fullText = "";
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(" ");
+                    fullText += pageText + "\n";
+                }
+
+                state.extractedPDFText = fullText;
+                statusLabel.innerText = `Success! Parsed ${pdf.numPages} pages. ✅`;
+                showNemoMessage(`📖 Securely extracted text from your PDF. Ready to import!`, "📄");
+            } catch (err) {
+                statusLabel.innerText = "Failed reading PDF. Ensure it isn't password protected.";
+                console.error(err);
+            }
+        }
+
+        // Google Docs public export converter (Bypasses CORS securely via CORS proxy)
+        async function fetchGoogleDocTextContent(docUrl) {
+            const matches = docUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+            if (!matches || !matches[1]) {
+                throw new Error("Invalid Google Doc link format. Please check the address.");
+            }
+            const docId = matches[1];
+            // Format to fetch pure plain text export from Google servers
+            const exportUrl = `https://docs.google.com/document/d/${docId}/export?format=txt`;
+            // Wrap in free public CORS proxy to allow direct client-side fetch in PWA
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(exportUrl)}`;
+
+            const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error("CORS proxy fetch failed.");
+
+            const json = await response.json();
+            if (!json.contents) throw new Error("Empty document contents returned.");
+            return json.contents;
+        }
+
+        // Trigger parser based on selected tab source
+        async function triggerBulkImportProcess() {
+            let rawText = "";
+
+            if (state.activeImportTab === 'copy') {
+                rawText = document.getElementById("import-pasted-text").value.trim();
+                if (!rawText) {
+                    showNemoMessage("⚠️ Please paste some logs or text list first!", "✍️");
+                    return;
+                }
+            } else if (state.activeImportTab === 'pdf') {
+                rawText = state.extractedPDFText.trim();
+                if (!rawText) {
+                    showNemoMessage("⚠️ Please drag or select a valid PDF report first!", "📄");
+                    return;
+                }
+            } else if (state.activeImportTab === 'gdoc') {
+                const url = document.getElementById("import-gdoc-url").value.trim();
+                if (!url) {
+                    showNemoMessage("⚠️ Please paste a Google Doc link first!", "🔗");
+                    return;
+                }
+
+                // Show loading status while fetching
+                toggleImportLoader(true, "Fetching Google Doc plain contents...");
+                try {
+                    rawText = await fetchGoogleDocTextContent(url);
+                } catch(err) {
+                    toggleImportLoader(false);
+                    showNemoMessage("❌ Failed loading document. Make sure it's shared as 'Anyone with the link can view'!", "🔒");
+                    return;
+                }
+            }
+
+            // Run AI analysis or simulated fallback
+            await parseExtractedTextWithAI(rawText);
+        }
+
+        function toggleImportLoader(show, text = "Nemo is studying details...") {
+            const wrapper = document.getElementById("import-status-wrapper");
+            const msg = document.getElementById("import-status-message");
+            const btn = document.getElementById("btn-run-bulk-import");
+
+            if (show) {
+                wrapper.classList.remove("hidden");
+                msg.innerText = text;
+                btn.classList.add("hidden");
+            } else {
+                wrapper.classList.add("hidden");
+                btn.classList.remove("hidden");
+            }
+        }
+
+        // Process logs with Gemini 2.5 Flash
+        async function parseExtractedTextWithAI(rawText) {
+            toggleImportLoader(true, "Nemo is extracting book names...");
+
+            const apiKey = localStorage.getItem('deetya_gemini_api_key') || "";
+
+            // Fallback: If no custom API key is entered, run automated visual simulation
+            if (!apiKey) {
+                await new Promise(resolve => setTimeout(resolve, 2500));
+
+                // Generate smart mock outputs depending on text clues or fallback to lovely default list
+                let mockCollection = [
+                    { title: "Matilda", author: "Roald Dahl", series: "", volume: "", color: "#FFFFBA", pattern: "dots", sticker: "🎒" },
+                    { title: "The Hobbit", author: "J.R.R. Tolkien", series: "Middle-earth", volume: "1", color: "#BAFFC9", pattern: "waves", sticker: "🐉" },
+                    { title: "Charlotte's Web", author: "E.B. White", series: "", volume: "", color: "#FFC6FF", pattern: "stripes", sticker: "🕸️" }
+                ];
+
+                // Simple keyword filter to look highly smart in demo mode!
+                if (rawText.toLowerCase().includes("percy") || rawText.toLowerCase().includes("jackson")) {
+                    mockCollection = [
+                        { title: "Percy Jackson & the Lightning Thief", author: "Rick Riordan", series: "Percy Jackson", volume: "1", color: "#BAE1FF", pattern: "waves", sticker: "🔱" },
+                        { title: "Percy Jackson & the Sea of Monsters", author: "Rick Riordan", series: "Percy Jackson", volume: "2", color: "#BAFFC9", pattern: "stripes", sticker: "🌊" }
+                    ];
+                } else if (rawText.toLowerCase().includes("potter") || rawText.toLowerCase().includes("stone")) {
+                    mockCollection = [
+                        { title: "Harry Potter and the Sorcerer's Stone", author: "J.K. Rowling", series: "Harry Potter", volume: "1", color: "#E8AEFF", pattern: "stripes", sticker: "⚡" },
+                        { title: "Harry Potter and the Chamber of Secrets", author: "J.K. Rowling", series: "Harry Potter", volume: "2", color: "#FFDFBA", pattern: "dots", sticker: "🔑" }
+                    ];
+                }
+
+                toggleImportLoader(false);
+                displayImportedResults(mockCollection);
+                showNemoMessage("💡 Simulating imports! Enter your Gemini Key in settings for real book text lists.", "🔮");
+                return;
+            }
+
+            const systemPrompt = `You are a visual kid-librarian mascot named Nemo. 
+            Analyze the provided reading log text list, email logs, or syllabi documents.
+            Find every single distinct book mentioned in the text.
+            For each book, extract Title, Author, Series (if any), and Volume Number (if any).
+            Generate appropriate kids aesthetic spine designs (pastel hex colors, cute patterns, and emojis).`;
+
+            const promptText = `Find every book in this list:
+            """
+            ${rawText}
+            """
+            
+            Extract accurately:
+            - Title
+            - Author
+            - Series (empty if none)
+            - Volume Number (empty if none)
+            
+            Suggest children themes:
+            - color (choose a pastel shade hex like #FFB3BA, #FFDFBA, #FFFFBA, #BAFFC9, #BAE1FF, #E8AEFF, #FFC6FF)
+            - pattern (choose either 'solid', 'stripes', 'dots', or 'waves')
+            - sticker (choose a fun kids emoji like 🦄, 🦖, ⚡, 🚀, 🐶, 🐱, 🌲, 🌸, 🔮, 🍩, 🎨)`;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{
+                    role: "user",
+                    parts: [
+                        { text: promptText }
+                    ]
+                }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                title: { type: "STRING" },
+                                author: { type: "STRING" },
+                                series: { type: "STRING" },
+                                volume: { type: "STRING" },
+                                color: { type: "STRING" },
+                                pattern: { type: "STRING" },
+                                sticker: { type: "STRING" }
+                            },
+                            required: ["title", "author", "color", "pattern", "sticker"]
+                        }
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData?.error?.message || "Parsing failed");
+                }
+
+                const result = await response.json();
+                const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                toggleImportLoader(false);
+
+                if (jsonText) {
+                    const booksArray = JSON.parse(jsonText);
+                    displayImportedResults(booksArray);
+                } else {
+                    throw new Error("No book records extracted.");
+                }
+            } catch(e) {
+                toggleImportLoader(false);
+                showNemoMessage("⚠️ API Error! Please check your Google Key in settings (⚙️).", "🔒");
+                console.error(e);
+            }
+        }
+
+        function displayImportedResults(books) {
+            const listEl = document.getElementById("import-books-list");
+            const wrapper = document.getElementById("import-results-wrapper");
+
+            listEl.innerHTML = "";
+            state.parsedImportBooksTemp = books;
+
+            if (!books || books.length === 0) {
+                listEl.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-4">No books identified. Try modifying the text or document format.</p>`;
+                wrapper.classList.remove("hidden");
+                return;
+            }
+
+            books.forEach((b, index) => {
+                const item = document.createElement("div");
+                item.className = "flex items-center justify-between p-2 rounded-xl border border-slate-100 bg-slate-50 hover:bg-slate-100/50 transition";
+                item.innerHTML = `
+                    <div class="flex items-center space-x-2 flex-1 min-w-0">
+                        <span class="text-lg" style="color: ${b.color}">${b.sticker || '📖'}</span>
+                        <div class="truncate text-left">
+                            <p class="text-xs font-bold text-slate-700 truncate">${b.title}</p>
+                            <p class="text-[9px] text-slate-400 truncate">By ${b.author || 'Unknown'}</p>
+                        </div>
+                    </div>
+                    <input type="checkbox" id="import-item-${index}" checked class="w-4 h-4 text-emerald-500 border-gray-300 rounded focus:ring-emerald-400">
+                `;
+                listEl.appendChild(item);
+            });
+
+            wrapper.classList.remove("hidden");
+        }
+
+        function addAllVerifiedImportedBooks() {
+            let addedCount = 0;
+            let duplicateCount = 0;
+
+            state.parsedImportBooksTemp.forEach((b, index) => {
+                const chk = document.getElementById(`import-item-${index}`);
+                if (chk && chk.checked) {
+                    const isDuplicate = state.books.some(existingBook => 
+                        existingBook.title.trim().toLowerCase() === b.title.trim().toLowerCase()
+                    );
+
+                    if (isDuplicate) {
+                        duplicateCount++;
+                        return;
+                    }
+
+                    const newBook = {
+                        id: Date.now().toString() + index,
+                        title: b.title || "Untitled Adventure",
+                        author: b.author || "Unknown",
+                        series: b.series || "",
+                        volume: b.volume || "",
+                        status: 'read', 
+                        month: 'Jun',
+                        year: 2026,
+                        coverType: 'custom',
+                        coverData: '',
+                        color: b.color || '#BAF9FF',
+                        pattern: b.pattern || 'solid',
+                        sticker: b.sticker || '⭐️',
+                        rating: 0,
+                        tilt: parseFloat((Math.random() * 6 - 3).toFixed(1))
+                    };
+                    state.books.push(newBook);
+                    addedCount++;
+                }
+            });
+
+            if (addedCount > 0) {
+                // Clear search queries
+                state.searchQuery = "";
+                const searchIn = document.getElementById("search-input");
+                if (searchIn) searchIn.value = "";
+
+                saveToStorage();
+                renderApp();
+
+                triggerSpineCelebration();
+
+                let msg = `🪄 Spectacular! Imported ${addedCount} new books onto your shelves!`;
+                if (duplicateCount > 0) {
+                    msg += ` (Ignored ${duplicateCount} duplicates)`;
+                }
+                showNemoMessage(msg, '🎉');
+            } else if (duplicateCount > 0) {
+                showNemoMessage("⚠️ All selected books are already on your bookshelf!", '📚');
+            }
+
+            closeBulkImportModal();
+        }
+
+        /* ------------------ End of Magic Bulk Importer ------------------ */
 
         // Confetti effect
         function triggerSpineCelebration() {
@@ -1349,11 +1938,11 @@
 
             if (book.status === 'read') {
                 badge.innerText = "Completed ✅";
-                badge.className = "inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wide bg-emerald-100 text-emerald-800";
+                badge.className = "inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-800";
                 btnText.innerText = "Move to Currently Reading";
             } else {
                 badge.innerText = "Currently Reading 📖";
-                badge.className = "inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wide bg-amber-100 text-amber-800 animate-pulse";
+                badge.className = "inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide bg-amber-100 text-amber-800";
                 btnText.innerText = "Mark Completed & Celebrate!";
             }
 
@@ -1407,7 +1996,7 @@
             pickerRow.innerHTML = "";
             for (let i = 1; i <= 5; i++) {
                 const starBtn = document.createElement("i");
-                starBtn.className = `${i <= ratingVal ? 'fa-solid font-black' : 'fa-regular'} fa-star text-lg cursor-pointer text-amber-400 hover:scale-125 transition`;
+                starBtn.className = `${i <= ratingVal ? 'fa-solid' : 'fa-regular'} fa-star text-lg cursor-pointer text-amber-400 hover:scale-125 transition`;
                 starBtn.setAttribute("onclick", `rateBook(${i})`);
                 pickerRow.appendChild(starBtn);
             }
